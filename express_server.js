@@ -48,6 +48,11 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+app.get("/register", (req, res) => {
+  let templateVars = { username: req.cookies["username"] };
+  res.render("register", templateVars);
+});
+
 app.post("/login", (req, res) => {
   // validate username
   if (!/^\s*$/.test(req.body.username)) {
