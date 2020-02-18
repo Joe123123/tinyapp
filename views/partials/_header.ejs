@@ -12,32 +12,34 @@
     >
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
+    <div class="collapse navbar-collapse d-flex" id="navbarNavAltMarkup">
+      <div class="navbar-nav p-2 flex-grow-1">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <div>
-          <% if(!username) {%>
-          <form class="form-inline" action="/login" method="post">
-            <input
-              class="form-control mr-sm-2"
-              type="text"
-              name="username"
-              placeholder="username"
-            />
-            <button class="btn btn-outline-dark my-2 my-sm-0" type="submit">
-              Login
-            </button>
-          </form>
-          <% } else {%>
-          <form class="form-inline" action="/logout" method="post">
-            <span class="navbar-text">Logged In As: <%= username %></span>
-            <button class="btn btn-outline-dark my-2 my-sm-0" type="submit">
-              Logout
-            </button>
-          </form>
-          <% }%>
-        </div>
+      </div>
+      <div class="p-2">
+        <% if(!username) {%>
+        <form class="form-inline" action="/login" method="post">
+          <input
+            class="form-control mr-sm-2"
+            type="text"
+            name="username"
+            placeholder="username"
+          />
+          <button class="btn btn-outline-dark my-2 my-sm-0" type="submit">
+            Login
+          </button>
+        </form>
+        <% } else {%>
+        <form class="form-inline" action="/logout" method="post">
+          <span class="navbar-text" style="padding-right: 8px"
+            >Logged In As: <%= username %></span
+          >
+          <button class="btn btn-outline-dark my-2 my-sm-0" type="submit">
+            Logout
+          </button>
+        </form>
+        <% }%>
       </div>
     </div>
   </nav>
