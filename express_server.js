@@ -8,9 +8,9 @@ const urlDatabase = {
 };
 const generateRandomString = length => {
   const strs = "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
-  let randomStr;
+  let randomStr = "";
   for (let i = 0; i < length; i++) {
-    let index = Math.round(Math.random() * 62);
+    let index = Math.floor(Math.random() * 62);
     randomStr += strs[index];
   }
   return randomStr;
@@ -33,18 +33,33 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(6);
+  // if shortURL already exists, create a new one
   while (urlDatabase[shortURL]) {
     shortURL = generateRandomString(6);
   }
   urlDatabase[shortURL] = `http://${req.body.longURL}`;
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  if (!longURL) {
+    // when enter invalid shortURL
+    res.redirect("/urls/new");
+  } else {
+    res.redirect(longURL);
+  }
+});
+
 app.get("/urls/:shortURL", (req, res) => {
+  // when enter invalid shortURL
+  if (!urlDatabase[req.params.shortURL]) {
+    res.redirect("/urls/new");
+  }
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]
