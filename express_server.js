@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -15,6 +16,7 @@ const generateRandomString = length => {
   }
   return randomStr;
 };
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
