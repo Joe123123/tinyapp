@@ -22,7 +22,14 @@
           Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a>
         </p>
       </div>
-      <div class="card-footer text-muted"></div>
+      <div class="card-body">
+        <h3 class="card-title">Edit</h3>
+        <form method="POST" action="">
+          <label for="longURL">new URL:</label>
+          <input type="text" name="longURL" placeholder="http://" />
+          <button type="submit">Submit</button>
+        </form>
+      </div>
     </div>
     <!-- Bootstrap JS -->
     <script
