@@ -1,8 +1,9 @@
 const express = require("express");
-const app = express();
-const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcrypt");
+const app = express();
+const PORT = 8080; // default port 8080
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "kkkkkk" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "kkkkkk" }
@@ -112,9 +113,9 @@ app.post("/register", (req, res) => {
     users[userRandomID] = {
       id: userRandomID,
       email: req.body.email,
-      password: req.body.password
+      password: bcrypt.hashSync(req.body.password, 10)
     };
-    res.redirect("./urls");
+    res.redirect("/login");
   }
 });
 
@@ -135,7 +136,7 @@ app.post("/login", (req, res) => {
   for (let user in users) {
     if (
       users[user]["email"] === req.body.email &&
-      users[user]["password"] === req.body.password
+      bcrypt.compareSync(req.body.password, users[user]["password"])
     ) {
       res
         .cookie("user_id", user)
