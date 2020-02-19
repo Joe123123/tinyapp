@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
+const cookieSession = require("cookie-session");
 const app = express();
 const PORT = 8080;
 const urlDatabase = {
@@ -43,6 +44,12 @@ const urlsForUser = id => {
 };
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["key1"]
+  })
+);
 app.set("view engine", "ejs");
 
 app.get("/", (req, res) => {
@@ -54,16 +61,16 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if (req.cookies["user_id"]) {
-    let urls = urlsForUser(req.cookies["user_id"]);
+  if (req.session["user_id"]) {
+    let urls = urlsForUser(req.session["user_id"]);
     let templateVars = {
       urls: urls,
-      user: users[req.cookies["user_id"]]
+      user: users[req.session["user_id"]]
     };
     res.render("urls_index", templateVars);
   } else {
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       warningMessage: "Please login first!"
     };
     res.render("warning", templateVars);
@@ -78,22 +85,22 @@ app.post("/urls", (req, res) => {
   }
   urlDatabase[shortURL] = {
     longURL: `http://${req.body.longURL}`,
-    userID: req.cookies["user_id"]
+    userID: req.session["user_id"]
   };
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session["user_id"]) {
     res.redirect("/urls");
   } else {
-    let templateVars = { user: users[req.cookies["user_id"]] };
+    let templateVars = { user: users[req.session["user_id"]] };
     res.render("urls_new", templateVars);
   }
 });
 
 app.get("/register", (req, res) => {
-  let templateVars = { user: users[req.cookies["user_id"]] };
+  let templateVars = { user: users[req.session["user_id"]] };
   res.render("register", templateVars);
 });
 
@@ -107,7 +114,7 @@ app.post("/register", (req, res) => {
   if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
     res.status(400);
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       errorCode: res.statusCode,
       errorMessage: "Invalid email or password"
     };
@@ -115,7 +122,7 @@ app.post("/register", (req, res) => {
   } else if (!isUniqueEmail(req.body.email)) {
     res.status(400);
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       errorCode: res.statusCode,
       errorMessage: "Email already exists"
     };
@@ -131,7 +138,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  let templateVars = { user: users[req.cookies["user_id"]] };
+  let templateVars = { user: users[req.session["user_id"]] };
   res.render("login", templateVars);
 });
 
@@ -140,7 +147,7 @@ app.post("/login", (req, res) => {
   if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
     res.status(400);
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       errorCode: res.statusCode,
       errorMessage: "Invalid email or password"
     };
@@ -149,7 +156,7 @@ app.post("/login", (req, res) => {
   if (isUniqueEmail(req.body.email)) {
     res.status(403);
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       errorCode: res.statusCode,
       errorMessage: "Email is not registered"
     };
@@ -160,12 +167,13 @@ app.post("/login", (req, res) => {
       users[user]["email"] === req.body.email &&
       bcrypt.compareSync(req.body.password, users[user]["password"])
     ) {
-      res.cookie("user_id", user).redirect("/urls");
+      req.session["user_id"] = user;
+      res.redirect("/urls");
     }
   }
   res.status(403);
   let templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session["user_id"]],
     errorCode: res.statusCode,
     errorMessage: "Wrong password"
   };
@@ -173,7 +181,8 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id").redirect("./urls");
+  req.session = null;
+  res.redirect("./urls");
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -183,11 +192,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.cookies["user_id"]) {
+  if (!req.session["user_id"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
-    urlDatabase[req.params.shortURL]["userID"] !== req.cookies["user_id"]
+    urlDatabase[req.params.shortURL]["userID"] !== req.session["user_id"]
   ) {
     let templateVars = {
       user: users[req.cookies["user_id"]],
@@ -198,7 +207,7 @@ app.get("/urls/:shortURL", (req, res) => {
     let templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL]["longURL"],
-      user: users[req.cookies["user_id"]]
+      user: users[req.session["user_id"]]
     };
     res.render("urls_show", templateVars);
   }
@@ -206,14 +215,14 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.cookies["user_id"]) {
+  if (!req.session["user_id"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
     urlDatabase[req.params.shortURL]["userID"] !== req.cookies["user_id"]
   ) {
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       warningMessage: "This is not your shortURL."
     };
     res.render("warning", templateVars);
@@ -225,14 +234,14 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.cookies["user_id"]) {
+  if (!req.session["user_id"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
-    urlDatabase[req.params.shortURL]["userID"] !== req.cookies["user_id"]
+    urlDatabase[req.params.shortURL]["userID"] !== req.session["user_id"]
   ) {
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       warningMessage: "This is not your shortURL."
     };
     res.render("warning", templateVars);
