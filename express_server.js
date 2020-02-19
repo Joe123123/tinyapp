@@ -3,6 +3,12 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const cookieSession = require("cookie-session");
+const {
+  generateRandomString,
+  isUniqueEmail,
+  urlsForUser,
+  isEmptyString
+} = require("./helper");
 const app = express();
 const PORT = 8080;
 const urlDatabase = {
@@ -26,36 +32,7 @@ const users = {
     password: bcrypt.hashSync("kkk", 10)
   }
 };
-const generateRandomString = length => {
-  const strs = "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
-  let randomStr = "";
-  for (let i = 0; i < length; i++) {
-    let index = Math.floor(Math.random() * 62);
-    randomStr += strs[index];
-  }
-  return randomStr;
-};
-const isUniqueEmail = email => {
-  for (let user in users) {
-    if (users[user]["email"] === email) {
-      return false;
-    }
-  }
-  return true;
-};
-const urlsForUser = id => {
-  let urls = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url]["userID"] === id) {
-      urls[url] = {
-        longURL: urlDatabase[url]["longURL"],
-        createDate: urlDatabase[url]["createDate"],
-        visited: urlDatabase[url]["visited"]
-      };
-    }
-  }
-  return urls;
-};
+
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
@@ -76,7 +53,7 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
   if (req.session["user_id"]) {
-    let urls = urlsForUser(req.session["user_id"]);
+    let urls = urlsForUser(req.session["user_id"], urlDatabase);
     let templateVars = {
       urls: urls,
       user: users[req.session["user_id"]]
@@ -127,7 +104,7 @@ app.post("/register", (req, res) => {
     userRandomID = generateRandomString(6);
   }
   // test empty email, password and unique email
-  if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
+  if (isEmptyString(req.body.email, req.body.password)) {
     res.status(400);
     let templateVars = {
       user: users[req.session["user_id"]],
@@ -135,7 +112,7 @@ app.post("/register", (req, res) => {
       errorMessage: "Invalid email or password"
     };
     res.render("error", templateVars);
-  } else if (!isUniqueEmail(req.body.email)) {
+  } else if (!isUniqueEmail(req.body.email, users)) {
     res.status(400);
     let templateVars = {
       user: users[req.session["user_id"]],
@@ -160,7 +137,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   // test empty email, password and unique email
-  if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
+  if (isEmptyString(req.body.email, req.body.password)) {
     res.status(400);
     let templateVars = {
       user: users[req.session["user_id"]],
@@ -169,7 +146,7 @@ app.post("/login", (req, res) => {
     };
     res.render("error", templateVars);
   }
-  if (isUniqueEmail(req.body.email)) {
+  if (isUniqueEmail(req.body.email, users)) {
     res.status(403);
     let templateVars = {
       user: users[req.session["user_id"]],
@@ -198,7 +175,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("./urls");
+  res.redirect("/urls");
 });
 
 app.get("/u/:shortURL", (req, res) => {
