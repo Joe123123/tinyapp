@@ -3,16 +3,16 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "kkkkkk" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "kkkkkk" }
 };
 const users = {
   kkkkkk: {
-    id: "eyeyey",
+    id: "kkkkkk",
     email: "fake@gmail.com",
-    password: "kkk"
+    password: bcrypt.hashSync("kkk", 10)
   }
 };
 const generateRandomString = length => {
@@ -54,7 +54,7 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if (req.cookies["login"]) {
+  if (req.cookies["user_id"]) {
     let urls = urlsForUser(req.cookies["user_id"]);
     let templateVars = {
       urls: urls,
@@ -63,9 +63,10 @@ app.get("/urls", (req, res) => {
     res.render("urls_index", templateVars);
   } else {
     let templateVars = {
-      user: users[req.cookies["user_id"]]
+      user: users[req.cookies["user_id"]],
+      warningMessage: "Please login first!"
     };
-    res.render("needlogin", templateVars);
+    res.render("warning", templateVars);
   }
 });
 
@@ -83,7 +84,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies["login"]) {
+  if (!req.cookies["user_id"]) {
     res.redirect("/urls");
   } else {
     let templateVars = { user: users[req.cookies["user_id"]] };
@@ -104,11 +105,21 @@ app.post("/register", (req, res) => {
   }
   // test empty email, password and unique email
   if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
-    res.statusCode = 400;
-    res.send(`Error ${res.statusCode}: invalid email or password`);
+    res.status(400);
+    let templateVars = {
+      user: users[req.cookies["user_id"]],
+      errorCode: res.statusCode,
+      errorMessage: "Invalid email or password"
+    };
+    res.render("error", templateVars);
   } else if (!isUniqueEmail(req.body.email)) {
-    res.statusCode = 400;
-    res.send(`Error ${res.statusCode}: email already`);
+    res.status(400);
+    let templateVars = {
+      user: users[req.cookies["user_id"]],
+      errorCode: res.statusCode,
+      errorMessage: "Email already exists"
+    };
+    res.render("error", templateVars);
   } else {
     users[userRandomID] = {
       id: userRandomID,
@@ -125,34 +136,44 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
+  // test empty email, password and unique email
   if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
-    res.statusCode = 400;
-    res.send(`Error ${res.statusCode}: invalid email or password`);
+    res.status(400);
+    let templateVars = {
+      user: users[req.cookies["user_id"]],
+      errorCode: res.statusCode,
+      errorMessage: "Invalid email or password"
+    };
+    res.render("error", templateVars);
   }
   if (isUniqueEmail(req.body.email)) {
-    res.statusCode = 403;
-    res.send(`Error ${res.statusCode}: email is not registered`);
+    res.status(403);
+    let templateVars = {
+      user: users[req.cookies["user_id"]],
+      errorCode: res.statusCode,
+      errorMessage: "Email is not registered"
+    };
+    res.render("error", templateVars);
   }
   for (let user in users) {
     if (
       users[user]["email"] === req.body.email &&
       bcrypt.compareSync(req.body.password, users[user]["password"])
     ) {
-      res
-        .cookie("user_id", user)
-        .cookie("login", true)
-        .redirect("/urls");
+      res.cookie("user_id", user).redirect("/urls");
     }
   }
-  res.statusCode = 403;
-  res.send(`Error ${res.statusCode}: wrong password`);
+  res.status(403);
+  let templateVars = {
+    user: users[req.cookies["user_id"]],
+    errorCode: res.statusCode,
+    errorMessage: "Wrong password"
+  };
+  res.render("error", templateVars);
 });
 
 app.post("/logout", (req, res) => {
-  res
-    .clearCookie("user_id")
-    .clearCookie("login")
-    .redirect("./urls");
+  res.clearCookie("user_id").redirect("./urls");
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -162,13 +183,17 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.cookies["login"]) {
+  if (!req.cookies["user_id"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
     urlDatabase[req.params.shortURL]["userID"] !== req.cookies["user_id"]
   ) {
-    res.send("not your shortURL");
+    let templateVars = {
+      user: users[req.cookies["user_id"]],
+      warningMessage: "This is not your shortURL."
+    };
+    res.render("warning", templateVars);
   } else {
     let templateVars = {
       shortURL: req.params.shortURL,
@@ -181,13 +206,17 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.cookies["login"]) {
+  if (!req.cookies["user_id"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
     urlDatabase[req.params.shortURL]["userID"] !== req.cookies["user_id"]
   ) {
-    res.send("not your shortURL");
+    let templateVars = {
+      user: users[req.cookies["user_id"]],
+      warningMessage: "This is not your shortURL."
+    };
+    res.render("warning", templateVars);
   } else {
     urlDatabase[req.params.shortURL]["longURL"] = `http://${req.body.longURL}`;
     res.redirect("/urls");
@@ -196,13 +225,17 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.cookies["login"]) {
+  if (!req.cookies["user_id"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
     urlDatabase[req.params.shortURL]["userID"] !== req.cookies["user_id"]
   ) {
-    res.send("not your shortURL");
+    let templateVars = {
+      user: users[req.cookies["user_id"]],
+      warningMessage: "This is not your shortURL."
+    };
+    res.render("warning", templateVars);
   } else {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
