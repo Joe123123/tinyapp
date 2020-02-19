@@ -7,6 +7,7 @@ const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+const users = {};
 const generateRandomString = length => {
   const strs = "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
   let randomStr = "";
@@ -15,6 +16,14 @@ const generateRandomString = length => {
     randomStr += strs[index];
   }
   return randomStr;
+};
+const isUniqueEmail = email => {
+  for (let user in users) {
+    if (users[user]["email"] === email) {
+      return false;
+    }
+  }
+  return true;
 };
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -29,13 +38,13 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]] };
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(6);
-  // if shortURL already exists, create a new one
+  // unique shortURL
   while (urlDatabase[shortURL]) {
     shortURL = generateRandomString(6);
   }
@@ -44,27 +53,67 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: users[req.cookies["user_id"]] };
   res.render("register", templateVars);
 });
 
-app.post("/login", (req, res) => {
-  // validate username
-  if (!/^\s*$/.test(req.body.username)) {
-    res.cookie("username", req.body.username);
-    res.redirect("./urls");
+app.post("/register", (req, res) => {
+  let userRandomID = generateRandomString(6);
+  // unique ID
+  while (users[userRandomID]) {
+    userRandomID = generateRandomString(6);
+  }
+  // test empty email, password and unique email
+  if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
+    res.statusCode = 400;
+    res.send(`Error ${res.statusCode}: invalid email or password`);
+  } else if (!isUniqueEmail(req.body.email)) {
+    res.statusCode = 400;
+    res.send(`Error ${res.statusCode}: email already`);
   } else {
+    users[userRandomID] = {
+      id: userRandomID,
+      email: req.body.email,
+      password: req.body.password
+    };
     res.redirect("./urls");
   }
 });
 
+app.get("/login", (req, res) => {
+  let templateVars = { user: users[req.cookies["user_id"]] };
+  res.render("login", templateVars);
+});
+
+app.post("/login", (req, res) => {
+  if (/^\s*$/.test(req.body.email) || /^\s*$/.test(req.body.password)) {
+    res.statusCode = 400;
+    res.send(`Error ${res.statusCode}: invalid email or password`);
+  }
+  if (isUniqueEmail(req.body.email)) {
+    res.statusCode = 403;
+    res.send(`Error ${res.statusCode}: email is not registered`);
+  }
+  for (let user in users) {
+    if (
+      users[user]["email"] === req.body.email &&
+      users[user]["password"] === req.body.password
+    ) {
+      res.cookie("user_id", user);
+      res.redirect("/urls");
+    }
+  }
+  res.statusCode = 403;
+  res.send(`Error ${res.statusCode}: wrong password`);
+});
+
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("./urls");
 });
 
@@ -86,7 +135,7 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_show", templateVars);
 });
