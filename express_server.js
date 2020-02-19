@@ -6,8 +6,18 @@ const cookieSession = require("cookie-session");
 const app = express();
 const PORT = 8080;
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "kkkkkk" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "kkkkkk" }
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    createDate: "0000-00-00",
+    visited: 111,
+    userID: "kkkkkk"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    createDate: "1111-11-11",
+    visited: 222,
+    userID: "kkkkkk"
+  }
 };
 const users = {
   kkkkkk: {
@@ -37,7 +47,11 @@ const urlsForUser = id => {
   let urls = {};
   for (let url in urlDatabase) {
     if (urlDatabase[url]["userID"] === id) {
-      urls[url] = urlDatabase[url]["longURL"];
+      urls[url] = {
+        longURL: urlDatabase[url]["longURL"],
+        createDate: urlDatabase[url]["createDate"],
+        visited: urlDatabase[url]["visited"]
+      };
     }
   }
   return urls;
@@ -85,6 +99,8 @@ app.post("/urls", (req, res) => {
   }
   urlDatabase[shortURL] = {
     longURL: `http://${req.body.longURL}`,
+    createDate: new Date().toJSON().slice(0, 10),
+    visited: 0,
     userID: req.session["user_id"]
   };
   res.redirect(`/urls/${shortURL}`);
@@ -187,6 +203,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]["longURL"];
+  urlDatabase[req.params.shortURL]["visited"] += 1;
   res.redirect(longURL);
 });
 
@@ -199,7 +216,7 @@ app.get("/urls/:shortURL", (req, res) => {
     urlDatabase[req.params.shortURL]["userID"] !== req.session["user_id"]
   ) {
     let templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session["user_id"]],
       warningMessage: "This is not your shortURL."
     };
     res.render("warning", templateVars);
@@ -207,6 +224,8 @@ app.get("/urls/:shortURL", (req, res) => {
     let templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL]["longURL"],
+      createDate: urlDatabase[req.params.shortURL]["createDate"],
+      visited: urlDatabase[req.params.shortURL]["visited"],
       user: users[req.session["user_id"]]
     };
     res.render("urls_show", templateVars);
@@ -219,7 +238,7 @@ app.post("/urls/:shortURL", (req, res) => {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
-    urlDatabase[req.params.shortURL]["userID"] !== req.cookies["user_id"]
+    urlDatabase[req.params.shortURL]["userID"] !== req.session["user_id"]
   ) {
     let templateVars = {
       user: users[req.session["user_id"]],

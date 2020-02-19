@@ -5,6 +5,8 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Created Date</th>
+          <th scope="col">Times of visited</th>
           <th scope="col">Edit</th>
           <th scope="col">Delete</th>
         </tr>
@@ -13,7 +15,9 @@
         <% for(let url in urls) { %>
         <tr>
           <td><a href=<%= "/u/" + url %>><%= url %></a></td>
-          <td><%= urls[url] %></td>
+          <td><%= urls[url]['longURL'] %></td>
+          <td><%= urls[url]['createDate'] %></td>
+          <td><%= urls[url]['visited'] %></td>
           <td><a href=<%= "/urls/" + url %>><button>Edit</button></a></td>
           <td>
             <form method="POST" action=<%= "/urls/" + url + "/delete" %>>
