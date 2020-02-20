@@ -9,7 +9,8 @@ const {
   urlsForUser,
   isEmptyString,
   getFormatDate,
-  getUserByEmail
+  getUserByEmail,
+  getLoggedInUser
 } = require("./helper");
 const app = express();
 const PORT = 8080;
@@ -36,7 +37,7 @@ app.use(
 );
 
 app.use("/", (req, res, next) => {
-  req["userLoggedIn"] = getLoggedInUser(req.session["user_id"]);
+  req["userLoggedIn"] = getLoggedInUser(req.session["user_id"], users);
   next();
 });
 
