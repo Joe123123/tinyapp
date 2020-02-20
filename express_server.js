@@ -31,7 +31,7 @@ app.use(
     keys: ["key1"]
   })
 );
-app.use("/", (req, res, next) => {
+app.use((req, res, next) => {
   req["userLoggedIn"] = getLoggedInUser(req.session["user_id"], users);
   next();
 });
