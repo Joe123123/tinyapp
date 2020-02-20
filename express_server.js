@@ -8,7 +8,8 @@ const {
   isUniqueEmail,
   urlsForUser,
   isEmptyString,
-  getFormatDate
+  getFormatDate,
+  getUserByEmail
 } = require("./helper");
 const app = express();
 const PORT = 8080;
@@ -150,23 +151,22 @@ app.post("/login", (req, res) => {
     };
     res.render("error", templateVars);
   }
-  for (let user in users) {
-    // matching email and password
-    if (
-      users[user]["email"] === req.body.email &&
-      bcrypt.compareSync(req.body.password, users[user]["password"])
-    ) {
-      req.session["user_id"] = user;
-      res.redirect("/urls");
-    }
+  let userByEmail = getUserByEmail(req.body.email, users);
+  if (
+    userByEmail &&
+    bcrypt.compareSync(req.body.password, users[userByEmail]["password"])
+  ) {
+    req.session["user_id"] = userByEmail;
+    res.redirect("/urls");
+  } else {
+    res.status(403);
+    let templateVars = {
+      user: users[req.session["user_id"]],
+      errorCode: res.statusCode,
+      errorMessage: "Wrong password"
+    };
+    res.render("error", templateVars);
   }
-  res.status(403);
-  let templateVars = {
-    user: users[req.session["user_id"]],
-    errorCode: res.statusCode,
-    errorMessage: "Wrong password"
-  };
-  res.render("error", templateVars);
 });
 
 app.post("/logout", (req, res) => {
