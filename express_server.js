@@ -1,6 +1,5 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const cookieSession = require("cookie-session");
 const {
@@ -15,7 +14,6 @@ const PORT = 8080;
 const urlDatabase = {};
 const users = {};
 
-app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   cookieSession({
