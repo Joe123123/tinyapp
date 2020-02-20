@@ -46,7 +46,7 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  if (req.session["user_id"]) {
+  if (req["userLoggedIn"]) {
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -54,16 +54,16 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if (req.session["user_id"]) {
-    let urls = urlsForUser(req.session["user_id"], urlDatabase);
+  if (req["userLoggedIn"]) {
+    let urls = urlsForUser(req["userLoggedIn"], urlDatabase);
     let templateVars = {
       urls: urls,
-      user: users[req.session["user_id"]]
+      user: users[req["userLoggedIn"]]
     };
     res.render("urls_index", templateVars);
   } else {
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       warningMessage: "Please login first!"
     };
     res.render("warning", templateVars);
@@ -81,22 +81,22 @@ app.post("/urls", (req, res) => {
     longURL: `http://${req.body.longURL}`,
     createDate: getFormatDate(),
     visited: 0,
-    userID: req.session["user_id"]
+    userID: req["userLoggedIn"]
   };
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.session["user_id"]) {
+  if (!req["userLoggedIn"]) {
     res.redirect("/urls");
   } else {
-    let templateVars = { user: users[req.session["user_id"]] };
+    let templateVars = { user: users[req["userLoggedIn"]] };
     res.render("urls_new", templateVars);
   }
 });
 
 app.get("/register", (req, res) => {
-  let templateVars = { user: users[req.session["user_id"]] };
+  let templateVars = { user: users[req["userLoggedIn"]] };
   res.render("register", templateVars);
 });
 
@@ -110,7 +110,7 @@ app.post("/register", (req, res) => {
   if (isEmptyString(req.body.email, req.body.password)) {
     res.status(400);
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       errorCode: res.statusCode,
       errorMessage: "Invalid email or password"
     };
@@ -118,7 +118,7 @@ app.post("/register", (req, res) => {
   } else if (!isUniqueEmail(req.body.email, users)) {
     res.status(400);
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       errorCode: res.statusCode,
       errorMessage: "Email already exists"
     };
@@ -134,7 +134,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  let templateVars = { user: users[req.session["user_id"]] };
+  let templateVars = { user: users[req["userLoggedIn"]] };
   res.render("login", templateVars);
 });
 
@@ -143,7 +143,7 @@ app.post("/login", (req, res) => {
   if (isEmptyString(req.body.email, req.body.password)) {
     res.status(400);
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       errorCode: res.statusCode,
       errorMessage: "Invalid email or password"
     };
@@ -152,7 +152,7 @@ app.post("/login", (req, res) => {
   if (isUniqueEmail(req.body.email, users)) {
     res.status(403);
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       errorCode: res.statusCode,
       errorMessage: "Email is not registered"
     };
@@ -168,7 +168,7 @@ app.post("/login", (req, res) => {
   } else {
     res.status(403);
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       errorCode: res.statusCode,
       errorMessage: "Wrong password"
     };
@@ -189,14 +189,14 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.session["user_id"]) {
+  if (!req["userLoggedIn"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
-    urlDatabase[req.params.shortURL]["userID"] !== req.session["user_id"]
+    urlDatabase[req.params.shortURL]["userID"] !== req["userLoggedIn"]
   ) {
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       warningMessage: "This is not your shortURL."
     };
     res.render("warning", templateVars);
@@ -206,7 +206,7 @@ app.get("/urls/:shortURL", (req, res) => {
       longURL: urlDatabase[req.params.shortURL]["longURL"],
       createDate: urlDatabase[req.params.shortURL]["createDate"],
       visited: urlDatabase[req.params.shortURL]["visited"],
-      user: users[req.session["user_id"]]
+      user: users[req["userLoggedIn"]]
     };
     res.render("urls_show", templateVars);
   }
@@ -214,14 +214,14 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.put("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.session["user_id"]) {
+  if (!req["userLoggedIn"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
-    urlDatabase[req.params.shortURL]["userID"] !== req.session["user_id"]
+    urlDatabase[req.params.shortURL]["userID"] !== req["userLoggedIn"]
   ) {
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       warningMessage: "This is not your shortURL."
     };
     res.render("warning", templateVars);
@@ -233,14 +233,14 @@ app.put("/urls/:shortURL", (req, res) => {
 
 app.delete("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
-  if (!req.session["user_id"]) {
+  if (!req["userLoggedIn"]) {
     res.redirect("/urls");
   } else if (
     !urlDatabase[req.params.shortURL] ||
-    urlDatabase[req.params.shortURL]["userID"] !== req.session["user_id"]
+    urlDatabase[req.params.shortURL]["userID"] !== req["userLoggedIn"]
   ) {
     let templateVars = {
-      user: users[req.session["user_id"]],
+      user: users[req["userLoggedIn"]],
       warningMessage: "This is not your shortURL."
     };
     res.render("warning", templateVars);

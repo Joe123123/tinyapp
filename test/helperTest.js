@@ -4,7 +4,8 @@ const {
   urlsForUser,
   isEmptyString,
   getFormatDate,
-  getUserByEmail
+  getUserByEmail,
+  getLoggedInUser
 } = require("../helper");
 const { assert } = require("chai");
 const urlDatabase = {
@@ -90,6 +91,14 @@ describe("express_server helper function", function() {
     });
     it("should return undifined when not matching email", function() {
       assert.isUndefined(getUserByEmail("new@gmail.com", users));
+    });
+  });
+  describe("getLoggedInUser", function() {
+    it("should return user when matching sessionID", function() {
+      assert.equal(getLoggedInUser("randID", users), "randID");
+    });
+    it("should return undefined when not matching sessionID", function() {
+      assert.isUndefined(getLoggedInUser("aNewID", users));
     });
   });
 });
