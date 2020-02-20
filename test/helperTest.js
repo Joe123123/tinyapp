@@ -3,7 +3,8 @@ const {
   isUniqueEmail,
   urlsForUser,
   isEmptyString,
-  getFormatDate
+  getFormatDate,
+  getUserByEmail
 } = require("../helper");
 const { assert } = require("chai");
 const urlDatabase = {
@@ -81,6 +82,14 @@ describe("express_server helper function", function() {
           getFormatDate()
         )
       );
+    });
+  });
+  describe("getUserByEmail", function() {
+    it("should return user when matching email", function() {
+      assert.equal(getUserByEmail("fake@gmail.com", users), "randID");
+    });
+    it("should return undifined when not matching email", function() {
+      assert.isUndefined(getUserByEmail("new@gmail.com", users));
     });
   });
 });

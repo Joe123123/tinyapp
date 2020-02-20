@@ -37,10 +37,18 @@ const isEmptyString = (...args) => {
   return false;
 };
 const getFormatDate = () => new Date().toJSON().slice(0, 10);
+const getUserByEmail = (email, users) => {
+  for (let user in users) {
+    if (users[user]["email"] === email) {
+      return user;
+    }
+  }
+};
 module.exports = {
   generateRandomString,
   isUniqueEmail,
   urlsForUser,
   isEmptyString,
-  getFormatDate
+  getFormatDate,
+  getUserByEmail
 };
