@@ -205,7 +205,7 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
-app.put("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL/edit", (req, res) => {
   // if not login, wrong shortURL, not matching userID
   if (!req.session["user_id"]) {
     res.redirect("/urls");
