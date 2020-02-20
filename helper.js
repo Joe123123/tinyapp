@@ -36,9 +36,11 @@ const isEmptyString = (...args) => {
   }
   return false;
 };
+const getFormatDate = () => new Date().toJSON().slice(0, 10);
 module.exports = {
   generateRandomString,
   isUniqueEmail,
   urlsForUser,
-  isEmptyString
+  isEmptyString,
+  getFormatDate
 };

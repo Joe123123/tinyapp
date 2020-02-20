@@ -7,7 +7,8 @@ const {
   generateRandomString,
   isUniqueEmail,
   urlsForUser,
-  isEmptyString
+  isEmptyString,
+  getFormatDate
 } = require("./helper");
 const app = express();
 const PORT = 8080;
@@ -76,7 +77,7 @@ app.post("/urls", (req, res) => {
   }
   urlDatabase[shortURL] = {
     longURL: `http://${req.body.longURL}`,
-    createDate: new Date().toJSON().slice(0, 10),
+    createDate: getFormatDate(),
     visited: 0,
     userID: req.session["user_id"]
   };
