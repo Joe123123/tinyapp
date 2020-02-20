@@ -16,6 +16,8 @@ const PORT = 8080;
 const urlDatabase = {};
 const users = {};
 
+app.set("view engine", "ejs");
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   methodOverride(function(req) {
@@ -32,7 +34,11 @@ app.use(
     keys: ["key1"]
   })
 );
-app.set("view engine", "ejs");
+
+app.use("/", (req, res, next) => {
+  req["userLoggedIn"] = getLoggedInUser(req.session["user_id"]);
+  next();
+});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);

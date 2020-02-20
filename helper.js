@@ -44,11 +44,19 @@ const getUserByEmail = (email, users) => {
     }
   }
 };
+const getLoggedInUser = (id, users) => {
+  for (let user in users) {
+    if (user === id) {
+      return user;
+    }
+  }
+};
 module.exports = {
   generateRandomString,
   isUniqueEmail,
   urlsForUser,
   isEmptyString,
   getFormatDate,
-  getUserByEmail
+  getUserByEmail,
+  getLoggedInUser
 };
