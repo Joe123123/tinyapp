@@ -20,7 +20,7 @@
           <td><%= urls[url]['visited'] %></td>
           <td><a href=<%= "/urls/" + url %>><button>Edit</button></a></td>
           <td>
-            <form method="POST" action=<%= "/urls/" + url + "/delete" %>>
+            <form method="POST" action=<%= "/urls/" + url %>>
               <input type="hidden" name="_method" value="DELETE">
               <button type="submit">Delete</button>
             </form>

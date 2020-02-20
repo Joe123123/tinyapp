@@ -205,7 +205,7 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
-app.put("/urls/:shortURL/edit", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
   if (!req.session["user_id"]) {
     res.redirect("/urls");
@@ -224,7 +224,7 @@ app.put("/urls/:shortURL/edit", (req, res) => {
   }
 });
 
-app.delete("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
   if (!req.session["user_id"]) {
     res.redirect("/urls");
