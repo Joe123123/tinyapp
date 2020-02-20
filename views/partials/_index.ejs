@@ -21,7 +21,8 @@
           <td><a href=<%= "/urls/" + url %>><button>Edit</button></a></td>
           <td>
             <form method="POST" action=<%= "/urls/" + url + "/delete" %>>
-            <button type="submit">Delete</button>
+              <input type="hidden" name="_method" value="DELETE">
+              <button type="submit">Delete</button>
             </form>
           </td>
         </tr>

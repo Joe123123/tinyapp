@@ -15,6 +15,7 @@
   <div class="card-body">
     <h3 class="card-title">Edit</h3>
     <form method="POST" action=<%= "/urls/" + shortURL %>>
+      <input type="hidden" name="_method" value="PUT">
       <label for="longURL">New URL:</label>
       <input type="text" name="longURL" placeholder="http://" />
       <button type="submit">Submit</button>

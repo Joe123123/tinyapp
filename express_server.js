@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const cookieSession = require("cookie-session");
+const methodOverride = require("method-override");
 const {
   generateRandomString,
   isUniqueEmail,
@@ -15,6 +16,15 @@ const urlDatabase = {};
 const users = {};
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  methodOverride(function(req) {
+    if (req.body && typeof req.body === "object" && "_method" in req.body) {
+      let method = req.body._method;
+      delete req.body._method;
+      return method;
+    }
+  })
+);
 app.use(
   cookieSession({
     name: "session",
@@ -52,6 +62,7 @@ app.get("/urls", (req, res) => {
   }
 });
 
+// post from /urls/new
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(6);
   // unique shortURL
@@ -194,7 +205,7 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
-app.post("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   // if not login, wrong shortURL, not matching userID
   if (!req.session["user_id"]) {
     res.redirect("/urls");
@@ -213,7 +224,7 @@ app.post("/urls/:shortURL", (req, res) => {
   }
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL/delete", (req, res) => {
   // if not login, wrong shortURL, not matching userID
   if (!req.session["user_id"]) {
     res.redirect("/urls");
