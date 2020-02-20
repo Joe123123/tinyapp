@@ -12,27 +12,8 @@ const {
 } = require("./helper");
 const app = express();
 const PORT = 8080;
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    createDate: "0000-00-00",
-    visited: 111,
-    userID: "kkkkkk"
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    createDate: "1111-11-11",
-    visited: 222,
-    userID: "kkkkkk"
-  }
-};
-const users = {
-  kkkkkk: {
-    id: "kkkkkk",
-    email: "fake@gmail.com",
-    password: bcrypt.hashSync("kkk", 10)
-  }
-};
+const urlDatabase = {};
+const users = {};
 
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -44,12 +25,16 @@ app.use(
 );
 app.set("view engine", "ejs");
 
-app.get("/", (req, res) => {
-  res.send("hello!");
-});
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+app.get("/", (req, res) => {
+  if (req.session["user_id"]) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls", (req, res) => {
@@ -157,6 +142,7 @@ app.post("/login", (req, res) => {
     res.render("error", templateVars);
   }
   for (let user in users) {
+    // matching email and password
     if (
       users[user]["email"] === req.body.email &&
       bcrypt.compareSync(req.body.password, users[user]["password"])
