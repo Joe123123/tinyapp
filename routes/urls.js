@@ -32,7 +32,7 @@ router.post("/", (req, res) => {
     shortURL = generateRandomString(6);
   }
   urlDatabase[shortURL] = {
-    longURL: `http://${req.body.longURL}`,
+    longURL: req.body.longURL,
     createDate: getFormatDate(),
     visited: 0,
     userID: req["userLoggedIn"]
