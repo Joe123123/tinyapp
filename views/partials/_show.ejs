@@ -21,4 +21,21 @@
       <button type="submit">Submit</button>
     </form>
   </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">ip</th>
+        <th scope="col">visits</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (let ip in ipData) { %>
+      <tr>
+        <td><%= ip %></td>
+        <td><%= ipData[ip] %></td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+
 </div>

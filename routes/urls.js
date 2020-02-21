@@ -4,7 +4,7 @@ const {
   urlsForUser,
   getFormatDate
 } = require("../helper");
-const { users, urlDatabase } = require("../database/data");
+const { users, urlDatabase, ipDatabase } = require("../database/data");
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -37,6 +37,7 @@ router.post("/", (req, res) => {
     visited: 0,
     userID: req["userLoggedIn"]
   };
+  ipDatabase[shortURL] = {};
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -68,7 +69,8 @@ router.get("/:shortURL", (req, res) => {
       longURL: urlDatabase[req.params.shortURL]["longURL"],
       createDate: urlDatabase[req.params.shortURL]["createDate"],
       visited: urlDatabase[req.params.shortURL]["visited"],
-      user: users[req["userLoggedIn"]]
+      user: users[req["userLoggedIn"]],
+      ipData: ipDatabase[req.params.shortURL]
     };
     res.render("urls_show", templateVars);
   }
