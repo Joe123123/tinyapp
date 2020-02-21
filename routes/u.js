@@ -6,7 +6,7 @@ router.get("/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     const longURL = urlDatabase[req.params.shortURL]["longURL"];
     urlDatabase[req.params.shortURL]["visited"] += 1;
-    let userIP = req.ip;
+    let userIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
     for (let url in ipDatabase) {
       if (url === req.params.shortURL) {
         ipDatabase[url][userIP] = ipDatabase[url][userIP] + 1 || 1;
